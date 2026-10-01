@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="uz">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1B2559" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>Tracker</title>
+  <meta name="description"
+    content="Shaxsiy kunlik faollik kuzatuvchisi — ishlaringizni qayd qiling, streaklar yig'ing va rejalaringizni boshqaring." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="extras.css?v=9" />
+</head>
+
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <a class="brand" href="#dashboard"><span class="brand-mark" aria-hidden="true"><img src="icon-192.png" alt="Logo"
+            class="brand-logo-img" /></span><span>ZERO to<br>GREAT</span></a>
+      <div class="nav-group-label">ASOSIY</div>
+      <nav aria-label="Sahifalar">
+        <button class="nav-link active" data-view="dashboard"><span>📊</span> Dashboard</button>
+        <button class="nav-link" data-view="tracker"><span>📋</span> Faoliyatlar</button>
+        <button class="nav-link" data-view="analytics"><span>📈</span> Tahlil</button>
+        <button class="nav-link" data-view="roadmap"><span>🗺</span> Roadmap</button>
+      </nav>
+      <div class="nav-group-label">BOSHQARISH</div>
+      <nav>
+        <button class="nav-link" data-view="timer"><span>⏱️</span> Vaqt kuzatuvi</button>
+        <button class="nav-link" data-view="appusage"><span>📱</span> Ilova kuzatuvi</button>
+        <button class="nav-link" data-view="achievements"><span>🏆</span> Yutuqlar</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button id="settingsButton" class="nav-link"><span>⚙</span> Sozlamalar</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-start">
+          <button id="sidebarToggle" class="topbar-menu" type="button" aria-label="Yon menyuni yig'ish">☰</button>
+          <label class="global-search"><span aria-hidden="true">⌕</span><input id="globalSearchInput" type="search"
+              placeholder="Qidirish" aria-label="Yozuvlarni qidirish" /></label>
+        </div>
+        <div class="header-actions">
+          <button id="themeToggle" class="theme-toggle" aria-label="Tema almashtirish">☀️</button>
+          <span id="syncStatus" class="sync-status saved" role="status">🟢 Saqlangan</span>
+          <button id="mobileSettings" class="icon-button" aria-label="Sozlamalar">⚙</button>
+        </div>
+      </header>
+      <section id="offlineBanner" class="notice warning hidden"></section>
+      <section id="summaryBanner" class="notice summary hidden"><span id="summaryText"></span><button
+          class="notice-close" data-close-notice="summaryBanner">×</button></section>
+      <section id="todayReminder" class="notice info hidden">✦ Bugun hali hech narsa qo'shmagansiz.</section>
+
+      <!-- ═══ DASHBOARD VIEW ═══ -->
+      <section id="dashboardView" class="view active">
+        <div class="page-lead dashboard-lead">
+          <div>
+            <p class="section-label">BOSH SAHIFA <span>/</span> DASHBOARD</p>
+            <h2 id="pageTitle">Kunlik ko'rinish</h2>
+            <p>Faolligingiz va natijalaringiz bir qarashda.</p>
+          </div>
+          <button id="dashAddButton" class="primary">＋ Ish qo'shish</button>
+        </div>
+        <section class="metrics" aria-label="Dashboard metrikalar">
+          <article>
+            <span class="metric-icon blue">📊</span>
+            <div><span>Jami Ishlar</span><strong id="dashTotal">0</strong><span class="metric-change up"
+                id="dashTotalChange"></span></div>
+          </article>
+          <article>
+            <span class="metric-icon green">🔥</span>
+            <div><span>Joriy Streak</span><strong id="dashStreak">0 kun</strong><span class="metric-change up"
+                id="dashStreakChange"></span></div>
+          </article>
+          <article>
+            <span class="metric-icon orange">✦</span>
+            <div><span>Bu Oyda</span><strong id="dashMonth">0 ish</strong><span class="metric-change"
+                id="dashMonthChange"></span></div>
+          </article>
+          <article>
+            <span class="metric-icon purple">⏱</span>
+            <div><span>Sarflangan Vaqt</span><strong id="dashTime">0s 0d</strong><span class="metric-change up"
+                id="dashTimeChange"></span></div>
+          </article>
+        </section>
+
+        <div class="dashboard-grid">
+          <!-- Performance Chart -->
+          <article class="chart-card">
+            <div class="card-heading">
+              <div>
+                <h3>Faollik Statistikasi</h3>
+                <p>Oylar bo'yicha bajarilgan ishlar</p>
+              </div>
+            </div>
+            <canvas id="dashBarChart" width="800" height="280" aria-label="Oylar bar diagrammasi"></canvas>
+            <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--text-secondary);">
+              <span><i
+                  style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--accent);margin-right:4px;"></i>
+                Bu yil</span>
+              <span><i
+                  style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--warning);margin-right:4px;"></i>
+                O'tgan yil</span>
+            </div>
+          </article>
+
+          <!-- Top Categories -->
+          <article class="top-categories-card">
+            <h3>Top Kategoriyalar</h3>
+            <div id="dashCategories"></div>
+          </article>
+        </div>
+
+        <div class="dashboard-bottom">
+          <!-- Recent Tasks -->
+          <article class="recent-tasks-card">
+            <h3>So'nggi Faoliyatlar</h3>
+            <div id="dashRecentTasks"></div>
+          </article>
+
+          <!-- Hours Heatmap -->
+          <article class="hours-card">
+            <h3>Soatlar Bo'yicha Ish</h3>
+            <div id="dashHoursChart"></div>
+          </article>
+
+          <!-- Task Statistics Donut -->
+          <article class="task-stats-card">
+            <h3>Kategoriya Taqsimoti</h3>
+            <p>Jami ishlar bo'yicha foizlar</p>
+            <canvas id="dashDonutChart" width="300" height="260" aria-label="Kategoriya donut"></canvas>
+            <div id="dashDonutLegend" class="donut-legend"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ═══ TRACKER VIEW ═══ -->
+      <section id="trackerView" class="view">
+        <div class="page-lead">
+          <div>
+            <p class="section-label">FAOLLIK KO'RINISHI</p>
+            <h2>Har bir kichik qadam katta natijaga aylanadi.</h2>
+          </div><button id="addButton" class="primary">＋ Bugungi ishni qo'shish</button>
+        </div>
+        <section class="metrics" aria-label="Statistika">
+          <article><span class="metric-icon green">🔥</span>
+            <div><span>Joriy streak</span><strong id="currentStreakMetric">0 kun</strong></div>
+          </article>
+          <article><span class="metric-icon orange">🏆</span>
+            <div><span>Eng uzun streak</span><strong id="streakMetric">0 kun</strong></div>
+          </article>
+          <article><span class="metric-icon blue">✦</span>
+            <div><span>Bu oyda</span><strong id="monthMetric">0 ish</strong></div>
+          </article>
+          <article><span class="metric-icon purple">▣</span>
+            <div><span>Eng faol oy</span><strong id="activeMonthMetric">—</strong></div>
+          </article>
+        </section>
+        <section id="goalCard" class="goal-card hidden">
+          <div class="goal-icon">🎯</div>
+          <div class="goal-copy"><strong>Oylik maqsad</strong><span id="goalText">0 / 0 ish</span></div>
+          <div class="progress-track"><i id="goalProgress"></i></div><b id="goalPercent">0%</b>
+        </section>
+        <section class="filter-row"><span>Filtrlash:</span>
+          <div id="tagFilters" class="tag-filters"></div>
+        </section>
+        <section class="search-card"><input id="searchInput" type="search" placeholder="Yozuvlarda qidirish..."
+            aria-label="Yozuvlarda qidirish" />
+          <div id="dateFilters" class="date-filters"><button data-range="7">7 kun</button><button data-range="30">30
+              kun</button><button data-range="90">90 kun</button><button data-range="year">Shu yil</button><button
+              class="active" data-range="all">Barchasi</button></div>
+        </section>
+        <section id="searchResults" class="search-results hidden"></section>
+        <section class="activity-card">
+          <div class="card-top">
+            <div class="year-nav"><button id="prevYear" aria-label="Oldingi yil">◀</button><strong
+                id="yearLabel"></strong><button id="nextYear" aria-label="Keyingi yil">▶</button></div>
+            <div class="total"><b id="totalEvents">0</b><span>Total events<br>this year</span></div>
+          </div>
+          <div id="monthLabels" class="month-labels"></div>
+          <div class="graph-wrap">
+            <div class="weekday-labels"><span>Du</span><span>Ch</span><span>Ju</span><span>Ya</span></div>
+            <div id="graph" class="graph" aria-label="Faollik grafigi"></div>
+          </div>
+          <div class="card-footer">
+            <div class="key"><span>Key</span><i class="level-0"></i><span>Yo'q</span><i class="level-1"></i><span>1
+                ish</span><i class="level-2"></i><span>2 ish</span><i class="level-3"></i><span>3+ ish</span></div>
+          </div>
+        </section>
+        <div class="toolbar"><span id="message" class="message" aria-live="polite"></span></div>
+      </section>
+
+      <!-- ═══ ANALYTICS VIEW ═══ -->
+      <section id="analyticsView" class="view">
+        <div class="page-lead">
+          <div>
+            <p class="section-label">TAHLIL</p>
+            <h2>Faollik hisoboti</h2>
+            <p>Kategoriyalar va oylar bo'yicha umumiy ko'rinish.</p>
+          </div>
+        </div>
+        <section class="metrics analytics-metrics">
+          <article><span class="metric-icon blue">▦</span>
+            <div><span>Jami ishlar</span><strong id="analyticsTotal">0</strong></div>
+          </article>
+          <article><span class="metric-icon green">◌</span>
+            <div><span>O'rtacha kunlik</span><strong id="analyticsAverage">0</strong></div>
+          </article>
+          <article><span class="metric-icon orange">☀</span>
+            <div><span>Eng faol kun</span><strong id="analyticsWeekday">—</strong></div>
+          </article>
+          <article><span class="metric-icon purple">↗</span>
+            <div><span>Bu oy o'sishi</span><strong id="analyticsGrowth">—</strong></div>
+          </article>
+        </section>
+        <section class="comparison-row">
+          <article><span>Bu hafta vs o'tgan hafta</span><strong id="weeklyComparison">—</strong></article>
+          <article><span>Bu oy vs o'tgan oy</span><strong id="monthlyComparison">—</strong></article>
+        </section>
+        <section class="analytics-grid">
+          <article class="chart-card donut-card">
+            <div class="card-heading">
+              <div>
+                <h3>Kategoriya bo'yicha</h3>
+                <p>Jami ishlar taqsimoti</p>
+              </div>
+            </div><canvas id="donutChart" width="360" height="280" aria-label="Kategoriya donut diagrammasi"></canvas>
+            <div id="donutLegend" class="donut-legend"></div>
+          </article>
+          <article class="chart-card bars-card">
+            <div class="card-heading">
+              <div>
+                <h3>Oylar bo'yicha faollik</h3>
+                <p>Har oyda bajarilgan ishlar</p>
+              </div>
+            </div><canvas id="barChart" width="680" height="280" aria-label="Oylar bar diagrammasi"></canvas>
+          </article>
+        </section>
+        <section class="table-card">
+          <div class="card-heading">
+            <div>
+              <h3>Kategoriyalar</h3>
+              <p>Teglardan foydalanish tarixi</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Kategoriya</th>
+                  <th>Ishlar soni</th>
+                  <th>Oxirgi ishlatilgan</th>
+                </tr>
+              </thead>
+              <tbody id="categoryTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ═══ ROADMAP VIEW ═══ -->
+      <section id="roadmapView" class="view">
+        <div class="page-lead">
+          <div>
+            <p class="section-label">REJALASHTIRISH</p>
+            <h2>Roadmap</h2>
+            <p>Kelajakdagi ishlarni rejalashtirish.</p>
+          </div>
+          <div style="display:flex;gap:8px;"><button id="addRoadmapBtn" class="primary">＋ Reja qo'shish</button></div>
+        </div>
+        <section class="activity-card roadmap-card">
+          <div class="card-top">
+            <div class="year-nav"><button id="prevRoadmapPeriod" aria-label="Oldingi">◀</button><strong
+                id="roadmapPeriodLabel"></strong><button id="nextRoadmapPeriod" aria-label="Keyingi">▶</button></div>
+            <div class="roadmap-toggles"><button id="roadmapWeekBtn" class="active">Hafta</button><button
+                id="roadmapMonthBtn">Oy</button></div>
+          </div>
+          <div id="roadmapWeek" class="roadmap-timeline"></div>
+          <div id="roadmapMonth" class="roadmap-month-grid hidden"></div>
+        </section>
+      </section>
+
+      <!-- ═══ TIMER VIEW ═══ -->
+      <section id="timerView" class="view">
+        <div class="page-lead">
+          <div>
+            <p class="section-label">VAQT KUZATUVI</p>
+            <h2>Vaqt treker</h2>
+            <p>Ishlaringizga sarflangan vaqtni kuzating.</p>
+          </div>
+        </div>
+        <section class="timer-stats-grid">
+          <article class="timer-stat-card"><strong id="timerToday">0s 0d</strong><span>Bugun</span></article>
+          <article class="timer-stat-card"><strong id="timerWeek">0s 0d</strong><span>Bu hafta</span></article>
+          <article class="timer-stat-card"><strong id="timerMonth">0s 0d</strong><span>Bu oy</span></article>
+        </section>
+        <section class="activity-card" style="text-align:center;">
+          <div class="timer-display">
+            <div class="timer-digits" id="timerDisplay">00:00:00</div>
+            <div class="timer-label" id="timerStatusLabel">Taymer kutmoqda...</div>
+            <div class="timer-actions">
+              <button id="timerStartBtn" class="primary">▶ Boshlash</button>
+              <button id="timerStopBtn" class="primary hidden" disabled>⏹ To'xtatish va Saqlash</button>
+              <button id="timerCancelBtn" class="secondary hidden" disabled>✕ Bekor</button>
+            </div>
+          </div>
+        </section>
+        <section class="table-card" style="margin-top:16px;">
+          <div class="card-heading">
+            <div>
+              <h3>Bugungi vaqt yozuvlari</h3>
+              <p>Taymer orqali yozilgan vaqtlar</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Kategoriya</th>
+                  <th>Sarlavha</th>
+                  <th>Davomiyligi</th>
+                  <th>Vaqt</th>
+                </tr>
+              </thead>
+              <tbody id="timeEntriesTable"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="chart-card" style="margin-top:16px;">
+          <div class="card-heading">
+            <div>
+              <h3>Kategoriya bo'yicha vaqt</h3>
+              <p>Jami sarflangan vaqt taqsimoti</p>
+            </div>
+          </div>
+          <div id="timerCategoryBars"></div>
+        </section>
+      </section>
+
+      <!-- ═══ APP USAGE VIEW ═══ -->
+      <section id="appusageView" class="view">
+        <div class="page-lead">
+          <div>
+            <p class="section-label">ILOVA KUZATUVI</p>
+            <h2>Ilova foydalanishi</h2>
+            <p>Ilovalarga sarflangan vaqtni kuzating.</p>
+          </div><button id="addAppBtn" class="primary">＋ Ilova qo'shish</button>
+        </div>
+        <section class="metrics">
+          <article><span class="metric-icon blue">📱</span>
+            <div><span>Jami ilovalar</span><strong id="appTotal">0</strong></div>
+          </article>
+          <article><span class="metric-icon green">⏱</span>
+            <div><span>Bugungi vaqt</span><strong id="appTodayTime">0s 0d</strong></div>
+          </article>
+          <article><span class="metric-icon orange">📊</span>
+            <div><span>Bu hafta</span><strong id="appWeekTime">0s 0d</strong></div>
+          </article>
+          <article><span class="metric-icon purple">🏆</span>
+            <div><span>Eng ko'p</span><strong id="appTopApp">—</strong></div>
+          </article>
+        </section>
+        <section class="activity-card">
+          <div class="card-heading">
+            <div>
+              <h3>Bugungi ilova foydalanishi</h3>
+              <p>Qo'lda kiritilgan ilova vaqtlari</p>
+            </div>
+          </div>
+          <div id="appUsageList"></div>
+        </section>
+      </section>
+
+      <!-- ═══ ACHIEVEMENTS VIEW ═══ -->
+      <section id="achievementsView" class="view">
+        <div class="page-lead">
+          <div>
+            <p class="section-label">YUTUQLAR</p>
+            <h2>Yutuqlaringiz 🏆</h2>
+            <p>Har bir qadam — yangi belgi</p>
+          </div><span id="achievementCount" class="achievement-count">0 / 8</span>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:15px;text-align:center;">Yutuqlar doimiydir va
+          o'tmishdagi yozuvlar o'chirilsa ham bekor qilinmaydi.</p>
+        <div id="achievementGrid" class="achievement-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- FAB for mobile -->
+  <button id="fabAdd" class="fab" aria-label="Ish qo'shish">+</button>
+
+  <!-- Modals -->
+  <div id="entryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="entryModalTitle">
+    <div class="modal-box"><button class="close" data-close="entryModal" aria-label="Yopish">×</button>
+      <h2 id="entryModalTitle">Bugungi ishni qo'shish</h2>
+      <form id="entryForm"><label>Sarlavha<input id="entryTitle" required maxlength="120"
+            placeholder="Masalan: JavaScript darsi" /></label><label>Tavsif<textarea id="entryDescription"
+            maxlength="600" placeholder="Qisqa izoh (ixtiyoriy)"></textarea></label><label>Teg / kategoriya<input
+            id="entryTag" list="tagSuggestions" maxlength="30"
+            placeholder="CTF, Kod, Ingliz tili..." /></label><datalist id="tagSuggestions">
+          <option>CTF</option>
+          <option>Kod</option>
+          <option>Ingliz tili</option>
+          <option>Loyiha</option>
+          <option>O'qish</option>
+        </datalist><button class="primary submit" type="submit">Saqlash</button></form>
+    </div>
+  </div>
+  <div id="roadmapAddModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="roadmapAddModalTitle">
+    <div class="modal-box"><button class="close" data-close="roadmapAddModal" aria-label="Yopish">×</button>
+      <h2 id="roadmapAddModalTitle">Yangi reja qo'shish</h2>
+      <form id="roadmapAddForm"><label>Sana<input id="roadmapAddDate" type="date"
+            required /></label><label>Sarlavha<input id="roadmapAddTitle" required maxlength="120"
+            placeholder="Vazifa nomi" /></label><label>Teg / kategoriya<input id="roadmapAddTag" list="tagSuggestions"
+            maxlength="30" placeholder="Ixtiyoriy" /></label><button class="primary submit"
+          type="submit">Saqlash</button></form>
+    </div>
+  </div>
+  <div id="roadmapEditModal" class="modal hidden" role="dialog" aria-modal="true"
+    aria-labelledby="roadmapEditModalTitle">
+    <div class="modal-box"><button class="close" data-close="roadmapEditModal" aria-label="Yopish">×</button>
+      <h2 id="roadmapEditModalTitle">Rejani o'zgartirish</h2>
+      <form id="roadmapEditForm"><input type="hidden" id="roadmapEditDate" /><input type="hidden"
+          id="roadmapEditId" /><label>Sarlavha<input id="roadmapEditTitle" required maxlength="120"
+            placeholder="Vazifa nomi" /></label><label>Teg / kategoriya<input id="roadmapEditTag" list="tagSuggestions"
+            maxlength="30" placeholder="Ixtiyoriy" /></label>
+        <div style="display:flex;gap:8px;margin-top:16px;"><button class="primary submit" type="submit"
+            style="flex:1;">Saqlash</button><button class="secondary" type="button" id="roadmapDeleteBtn"
+            style="color:var(--danger);border-color:var(--danger-light);">O'chirish</button></div>
+      </form>
+    </div>
+  </div>
+  <div id="dayModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="dayModalTitle">
+    <div class="modal-box"><button class="close" data-close="dayModal" aria-label="Yopish">×</button>
+      <h2 id="dayModalTitle">Kun yozuvlari</h2>
+      <div id="dayEntries"></div>
+    </div>
+  </div>
+  <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+    <div class="modal-box"><button class="close" data-close="settingsModal" aria-label="Yopish">×</button>
+      <h2 id="settingsModalTitle">⚙ Sozlamalar</h2>
+      <div class="settings-subhead">📁 Mahalliy fayl saqlash</div>
+      <p class="help" id="fileApiStatus">Fayl holati yuklanmoqda...</p><button type="button" id="filePickerButton"
+        class="secondary" style="margin-top:8px;width:100%">📁 Faylni tanlash (ochish yoki yaratish)</button>
+      <div class="settings-subhead">🔒 Shifrlash</div>
+      <p class="help">Parol faqat qurilmangizda saqlanadi va local shifrlash uchun ishlatiladi. Hech qanday serverga
+        yuborilmaydi.</p>
+      <p class="help" id="encryptionStatus">⚠️ Parol hali o'rnatilmagan.</p><button type="button" id="changePasswordBtn"
+        class="secondary hidden" style="margin-top:8px;width:100%">🔑 Parolni o'zgartirish</button>
+      <form id="settingsForm"><label>Bu oydagi maqsad (ishlar soni)<input id="goalInput" type="number" min="1"
+            max="10000" placeholder="Masalan: 20" /></label><label class="switch-line"><input id="reduceMotionInput"
+            type="checkbox" /> Animatsiyalarni kamaytirish</label><label class="switch-line"><input id="soundInput"
+            type="checkbox" /> Tovush effektlarini yoqish</label><label class="switch-line"><input id="summariesInput"
+            type="checkbox" /> Haftalik va oylik xulosalar</label>
+        <div class="settings-subhead">Kategoriya ranglari</div>
+        <p class="help">Tanlangan rang diagramma, badge va jadvalda bir xil qo'llanadi.</p>
+        <div id="tagColorSettings" class="tag-color-settings"></div><button class="primary submit"
+          type="submit">Saqlash</button>
+      </form>
+    </div>
+  </div>
+  <div id="filePasswordModal" class="modal hidden" role="dialog" aria-modal="true"
+    aria-labelledby="filePasswordModalTitle">
+    <div class="modal-box"><button class="close" data-close="filePasswordModal" id="cancelFilePasswordBtn"
+        aria-label="Bekor qilish">×</button>
+      <h2 id="filePasswordModalTitle">🔒 Faylni shifrlash</h2>
+      <p class="help" id="filePasswordModalSubtext">Fayl uchun parolni kiriting.</p>
+      <div id="filePasswordModalError" class="notice warning hidden" style="margin-bottom:12px;font-size:12px;"></div>
+      <form id="filePasswordForm">
+        <div id="newFilePasswordFields" class="hidden"><label>Yangi shifrlash paroli<div class="password-input-wrap">
+              <input id="newPasswordInput" type="password" autocomplete="off"
+                placeholder="Kuchli parol kiriting" /><button type="button" id="toggleNewPassword"
+                class="toggle-password-btn" aria-label="Parolni ko'rsatish/yashirish">👁️</button></div>
+            </label><label>Parolni takrorlang<div class="password-input-wrap"><input id="confirmPasswordInput"
+                type="password" autocomplete="off" placeholder="Parolni qayta kiriting" /><button type="button"
+                id="toggleConfirmPassword" class="toggle-password-btn"
+                aria-label="Parolni ko'rsatish/yashirish">👁️</button></div></label></div>
+        <div id="existingFilePasswordFields" class="hidden"><label>Shifrlash paroli<div class="password-input-wrap">
+              <input id="existingPasswordInput" type="password" autocomplete="off"
+                placeholder="Parolni kiriting" /><button type="button" id="toggleExistingPassword"
+                class="toggle-password-btn" aria-label="Parolni ko'rsatish/yashirish">👁️</button></div></label></div>
+        <button id="filePasswordSubmitBtn" class="primary submit" type="submit"
+          style="margin-top:16px;">Tasdiqlash</button>
+      </form>
+    </div>
+  </div>
+  <div id="changePasswordModal" class="modal hidden" role="dialog" aria-modal="true"
+    aria-labelledby="changePasswordTitle">
+    <div class="modal-box"><button class="close" data-close="changePasswordModal" aria-label="Yopish">×</button>
+      <h2 id="changePasswordTitle">🔑 Parolni o'zgartirish</h2>
+      <p class="help">Yangi shifrlash parolini kiriting. Faylingiz yangi parol bilan qayta shifrlanadi.</p>
+      <form id="changePasswordForm"><label>Joriy parol<div class="password-input-wrap"><input id="currentPasswordInput"
+              type="password" required autocomplete="off" placeholder="Hozirgi parolni kiriting" /><button type="button"
+              id="toggleCurrentPassword" class="toggle-password-btn"
+              aria-label="Parolni ko'rsatish/yashirish">👁️</button></div></label><label>Yangi parol<div
+            class="password-input-wrap"><input id="changePasswordInput" type="password" required autocomplete="off"
+              placeholder="Yangi shifrlash paroli" /><button type="button" id="toggleChangePassword"
+              class="toggle-password-btn" aria-label="Parolni ko'rsatish/yashirish">👁️</button></div>
+          </label><label>Yangi parolni tasdiqlash<div class="password-input-wrap"><input id="confirmChangePasswordInput"
+              type="password" required autocomplete="off" placeholder="Yangi parolni tasdiqlang" /></div></label><button
+          class="primary submit" type="submit">🔒 Yangi parolni saqlash</button></form>
+    </div>
+  </div>
+  <!-- Timer Start Modal -->
+  <div id="timerStartModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-box"><button class="close" data-close="timerStartModal" aria-label="Yopish">×</button>
+      <h2>⏱ Taymer boshlash</h2>
+      <form id="timerStartForm"><label>Sarlavha<input id="timerTitle" required maxlength="120"
+            placeholder="Nima ish qilasiz?" /></label><label>Teg / kategoriya<input id="timerTag" list="tagSuggestions"
+            maxlength="30" placeholder="Kod, CTF..." /></label><button class="primary submit" type="submit">▶
+          Boshlash</button></form>
+    </div>
+  </div>
+  <!-- App Add Modal -->
+  <div id="appAddModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-box"><button class="close" data-close="appAddModal" aria-label="Yopish">×</button>
+      <h2>📱 Ilova qo'shish</h2>
+      <form id="appAddForm"><label>Ilova nomi<input id="appName" required maxlength="60"
+            placeholder="VS Code, Chrome..." /></label><label>Kategoriya<input id="appCategory" maxlength="30"
+            placeholder="Dasturlash, Brauzer..." /></label><label>Emoji ikonka<input id="appIcon" maxlength="4"
+            placeholder="💻" value="📱" />
+          <div class="emoji-presets"
+            style="margin-top:8px;display:flex;gap:12px;font-size:22px;cursor:pointer;justify-content:center;flex-wrap:wrap;background:var(--border-light);padding:8px;border-radius:8px;">
+            <span>📱</span><span>💻</span><span>🎮</span><span>📚</span><span>🎧</span><span>📹</span><span>🌐</span><span>💬</span>
+          </div>
+        </label><label>Sarflangan vaqt (daqiqalarda)<input id="appDuration" type="number" min="1" max="1440" required
+            placeholder="60" /></label><button class="primary submit" type="submit">Saqlash</button></form>
+    </div>
+  </div>
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+  <div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+  <div id="soundModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="soundTitle">
+    <div class="modal-box sound-box">
+      <h2 id="soundTitle">🔔 Yengil tovushlar</h2>
+      <p class="help">Yozuv saqlanganda kichik, yumshoq signal eshitilsinmi?</p>
+      <div class="sound-actions"><button id="soundYes" class="primary">Yoqish</button><button id="soundNo"
+          class="secondary">Hozircha yo'q</button></div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+
+</html>
